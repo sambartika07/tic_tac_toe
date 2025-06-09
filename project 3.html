@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tic Tac Toe 🎮</title>
+  <style>
+    body {
+      font-family: 'Comic Sans MS', cursive;
+      background: #ffe0f0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    h1 {
+      color: #ff5c8d;
+    }
+    .mode-buttons button {
+      margin: 5px;
+      padding: 10px 20px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 10px;
+      background: #ffc6e0;
+      cursor: pointer;
+    }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 80px);
+      gap: 8px;
+      margin-top: 20px;
+    }
+    .cell {
+      width: 80px;
+      height: 80px;
+      font-size: 2rem;
+      background: #fff;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .cell.x { color: #ff6f61; }
+    .cell.o { color: #5f9ea0; }
+    .message {
+      margin-top: 20px;
+      font-size: 1.2rem;
+      color: #333;
+    }
+    .restart {
+      margin-top: 10px;
+      padding: 8px 16px;
+      background: #caffbf;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>Tic Tac Toe ⚔️</h1>
+  <div class="mode-buttons">
+    <button onclick="setMode('pvp')">👫 Player vs Player</button>
+    <button onclick="setMode('ai')">🤖 Player vs AI</button>
+  </div>
+  <div class="board" id="board">
+    <div class="cell" data-cell></div>
+    <div class="cell" data-cell></div>
+    <div class="cell" data-cell></div>
+    <div class="cell" data-cell></div>
+    <div class="cell" data-cell></div>
+    <div class="cell" data-cell></div>
+    <div class="cell" data-cell></div>
+    <div class="cell" data-cell></div>
+    <div class="cell" data-cell></div>
+  </div>
+  <div class="message" id="message"></div>
+  <button class="restart" onclick="startGame()">🔄 Restart</button>
+
+  <script>
+    const X_CLASS = 'x';
+    const O_CLASS = 'o';
+    const WIN_COMBOS = [
+      [0,1,2],[3,4,5],[6,7,8],
+      [0,3,6],[1,4,7],[2,5,8],
+      [0,4,8],[2,4,6]
+    ];
+    const cells = document.querySelectorAll('[data-cell]');
+    const board = document.getElementById('board');
+    const message = document.getElementById('message');
+
+    let currentTurn, boardState, gameMode = 'pvp';
+
+    function setMode(mode) {
+      gameMode = mode;
+      startGame();
+    }
+
+    function startGame() {
+      boardState = Array(9).fill(null);
+      currentTurn = X_CLASS;
+      cells.forEach((cell, i) => {
+        cell.className = 'cell';
+        cell.textContent = '';
+        cell.onclick = () => handleClick(cell, i);
+      });
+      message.textContent = '';
+    }
+
+    function handleClick(cell, index) {
+      if (boardState[index]) return;
+      placeMark(cell, index, currentTurn);
+      if (checkWin(currentTurn)) {
+        message.textContent = `🎉 ${currentTurn.toUpperCase()} wins!`;
+        disableBoard();
+        return;
+      }
+      if (isDraw()) {
+        message.textContent = "😅 It's a draw!";
+        return;
+      }
+      currentTurn = currentTurn === X_CLASS ? O_CLASS : X_CLASS;
+      if (gameMode === 'ai' && currentTurn === O_CLASS) {
+        setTimeout(aiMove, 300);
+      }
+    }
+
+    function placeMark(cell, index, player) {
+      cell.classList.add(player);
+      cell.textContent = player === X_CLASS ? '❌' : '⭕';
+      boardState[index] = player;
+    }
+
+    function checkWin(player) {
+      return WIN_COMBOS.some(combo =>
+        combo.every(i => boardState[i] === player)
+      );
+    }
+
+    function isDraw() {
+      return boardState.every(cell => cell !== null);
+    }
+
+    function disableBoard() {
+      cells.forEach(cell => cell.onclick = null);
+    }
+
+    function aiMove() {
+      let move = findBestMove();
+      if (move !== null) cells[move].click();
+    }
+
+    function findBestMove() {
+      for (let i = 0; i < 9; i++) {
+        if (!boardState[i]) {
+          boardState[i] = O_CLASS;
+          if (checkWin(O_CLASS)) {
+            boardState[i] = null;
+            return i;
+          }
+          boardState[i] = null;
+        }
+      }
+      for (let i = 0; i < 9; i++) {
+        if (!boardState[i]) {
+          boardState[i] = X_CLASS;
+          if (checkWin(X_CLASS)) {
+            boardState[i] = null;
+            return i;
+          }
+          boardState[i] = null;
+        }
+      }
+      return boardState.findIndex(c => c === null);
+    }
+
+    // Start default game
+    startGame();
+  </script>
+</body>
+</html>
